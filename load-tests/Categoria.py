@@ -1,29 +1,49 @@
-from locust import HttpUser, task, between
 import random
-import string
+from locust import HttpUser, task, between
+import time
 
 class CategoriaLoadTest(HttpUser):
-    wait_time = between(1, 3) 
+    wait_time = between(1, 2)
+    token = ""
 
-    def gerar_string_aleatoria(self, tamanho=8):
-        letras = string.ascii_letters
-        return ''.join(random.choice(letras) for i in range(tamanho))
+    def on_start(self):
+        self.fluxo_autenticacao()
 
-    @task(3)
-    def listar_categorias(self):
-        self.client.get("/categorias", name="GET /categorias")
-
-    @task(1)
-    def criar_categoria(self):
-        nome_unico = f"Categoria LoadTest {self.gerar_string_aleatoria()}"
+    def fluxo_autenticacao(self):
+        user_id = random.randint(1000, 99999)
+        username = f"rafael_{user_id}"
         
-        payload = {
-            "nome": nome_unico,
-            "descricao": "Categoria gerada automaticamente pelo teste de carga do Locust."
+        payload_reg = {
+            "nomeUsuario": username, 
+            "email": f"rafael_{user_id}@teste.com",
+            "senha": "123", 
+            "nomeCompleto": f"Rafael Ferreira {user_id}"
+        }
+
+        self.client.post("/auth/registrar", json=payload_reg)
+        
+        res = self.client.post("/auth/login", json={"nomeUsuario": username, "senha": "123"})
+        
+        if res.status_code == 200:
+            self.token = res.json().get("token")
+
+    @task
+    def testar_categoria(self):
+        if not self.token: 
+            return
+            
+        headers = {
+            "Authorization": f"Bearer {self.token}", 
+            "Content-Type": "application/xml",
+            "Accept": "application/xml"
         }
         
-        with self.client.post("/categorias", json=payload, name="POST /categorias", catch_response=True) as response:
-            if response.status_code in [200, 201]:
-                response.success()
+        nome_c = f"Categoria_{int(time.time() * 1000)}_{random.randint(1, 999)}"
+        xml_data = f"<Categoria><nome>{nome_c}</nome><descricao>Teste Locust</descricao></Categoria>"
+        
+        with self.client.post("/categorias", data=xml_data, headers=headers, catch_response=True) as res_post:
+            if res_post.status_code == 201:
+                self.client.get("/categorias", headers=headers)
+                res_post.success()
             else:
-                response.failure(f"Status: {response.status_code}")
+                res_post.failure(f"Falha no POST: Status {res_post.status_code}")
