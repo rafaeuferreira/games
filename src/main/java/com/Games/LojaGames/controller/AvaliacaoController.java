@@ -2,7 +2,6 @@ package com.Games.LojaGames.controller;
 
 import com.Games.LojaGames.model.Avaliacao;
 import com.Games.LojaGames.repository.AvaliacaoRepository;
-import com.Games.LojaGames.service.ModeracaoAvaliacaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,9 +18,6 @@ public class AvaliacaoController {
     @Autowired
     private AvaliacaoRepository avaliacaoRepository;
 
-    @Autowired
-    private ModeracaoAvaliacaoService moderacaoAvaliacaoService;
-
     @GetMapping(produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<List<Avaliacao>> getAll() {
         return ResponseEntity.ok(avaliacaoRepository.findAll());
@@ -36,10 +32,7 @@ public class AvaliacaoController {
 
     @PostMapping(consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<Avaliacao> post(@RequestBody Avaliacao avaliacao) {
-        avaliacao.setStatus(Avaliacao.StatusAvaliacao.PENDENTE);
-        Avaliacao salva = avaliacaoRepository.save(avaliacao);
-        moderacaoAvaliacaoService.processarModeracao(salva.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(salva);
+        return ResponseEntity.status(HttpStatus.CREATED).body(avaliacaoRepository.save(avaliacao));
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
