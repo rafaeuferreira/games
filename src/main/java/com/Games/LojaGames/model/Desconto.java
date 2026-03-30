@@ -39,7 +39,16 @@ public class Desconto {
 
     @Column(nullable = false, updatable = false)
     @JacksonXmlProperty(localName = "criadoEm")
-    private LocalDateTime criadoEm = LocalDateTime.now();
+    private LocalDateTime criadoEm;
+
+    @Column(nullable = false)
+    @JacksonXmlProperty(localName = "ativo")
+    private boolean ativo = true;
+
+    @PrePersist
+    public void prePersist() {
+        this.criadoEm = LocalDateTime.now();
+    }
 
     public Long getId() { return id; }
 
@@ -64,4 +73,12 @@ public class Desconto {
     public void setFimEm(LocalDateTime fimEm) { this.fimEm = fimEm; }
 
     public LocalDateTime getCriadoEm() { return criadoEm; }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
 }
