@@ -7,6 +7,7 @@ import com.Games.LojaGames.model.Usuario;
 import com.Games.LojaGames.repository.UsuarioRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+//comentário para fazer pull request
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
